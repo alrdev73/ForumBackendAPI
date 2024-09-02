@@ -8,6 +8,7 @@ public interface ISubforumService
     public IEnumerable<Subforum> Get(int categoryId);
     public Subforum Create(string name, string description, string categoryName);
     
-    public string NameFromSubforumId(int subforumId);
+    public int IdFromSubforumName(string subforumName);
     ActionResult<Subforum> Update(int subforumId, Subforum subforum);
+    string NameFromSubforumId(int subforumId);
 }

@@ -14,4 +14,22 @@ public class ThreadController(IThreadService threadService) : ControllerBase
     {
         return threadService.Get(forumId);
     }
+
+    public struct ThreadCreateRequest
+    {
+        public string Name { get; }
+        
+        public string? Description { get; }
+        
+        public string Author { get; }
+        
+        public string SubforumName { get; }
+    }
+    
+
+    [HttpPost(Name = "CreateThread")]
+    public ActionResult<ForumThread> CreateThread([FromBody] ThreadCreateRequest thread)
+    {
+        return threadService.Create(thread.Name, thread.Description, thread.Author, thread.SubforumName);
+    }
 }

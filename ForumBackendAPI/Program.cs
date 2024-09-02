@@ -4,6 +4,17 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var specificOrigin = "AllowVite";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: specificOrigin,
+        policy =>
+        {
+            // vite
+            policy.WithOrigins("https://localhost:5173");
+        });
+});
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -33,10 +44,8 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors(corsPolicyBuilder => corsPolicyBuilder
-        .AllowAnyOrigin()
-        .AllowAnyMethod()
-        .AllowAnyHeader()); 
+
+    app.UseCors(specificOrigin);
 }
 
 app.UseHttpsRedirection();

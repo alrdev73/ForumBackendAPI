@@ -11,6 +11,11 @@ public class SubforumService(ILogger<SubforumService> logger, ForumContext conte
         return context.Subforums.Where(c => c.CategoryId == categoryId).ToList();
     }
     
+    public int IdFromSubforumName(string subforumName)
+    {
+        return context.Subforums.First(c => c.Name == subforumName).SubforumId;
+    }
+    
     public string NameFromSubforumId(int subforumId)
     {
         return context.Subforums.First(c => c.SubforumId == subforumId).Name;
@@ -41,4 +46,6 @@ public class SubforumService(ILogger<SubforumService> logger, ForumContext conte
         context.SaveChanges();
         return existingSubforum;
     }
+
+    
 }

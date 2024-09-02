@@ -4,7 +4,7 @@ namespace ForumBackendAPI.Services;
 
 public interface ICategoryService
 {
-    IEnumerable<Category> Get();
+    Task<IEnumerable<Category>> Get();
     Category Create(Category category);
     
     public string NameFromCategoryId(int categoryId);

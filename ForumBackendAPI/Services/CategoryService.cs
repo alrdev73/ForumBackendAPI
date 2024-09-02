@@ -1,4 +1,5 @@
 ﻿using ForumBackendAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace ForumBackendAPI.Services;
 
@@ -15,10 +16,10 @@ public class CategoryService(ILogger<CategoryService> logger, ForumContext conte
         return context.Categories.First(c => c.Name.ToLower() == categoryName.ToLower()).CategoryId;
     }
 
-    public IEnumerable<Category> Get()
+    public async Task<IEnumerable<Category>> Get()
     {
         logger.LogInformation("Getting categories");
-        var categories = context.Categories.ToList();
+        var categories = await context.Categories.ToListAsync();
         return categories;
     }
     

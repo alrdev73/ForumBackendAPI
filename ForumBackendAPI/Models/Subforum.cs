@@ -8,10 +8,8 @@ public class Subforum
 {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int SubforumId { get; set; }
-    
-    [MaxLength (50)]
-    [Required]
-    public string Name { get; set; }
+
+    [MaxLength(50)] [Required] public string Name { get; set; } = "noname";
     
     [MaxLength (100)]
     public string? Description { get; set; }

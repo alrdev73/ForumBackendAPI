@@ -1,30 +1,33 @@
 ﻿using ForumBackendAPI.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ForumBackendAPI.Services;
 
-public class ThreadService(ILogger<ThreadService> logger) : IThreadService
+public class ThreadService(ILogger<ThreadService> logger, 
+    ForumContext context,
+    ISubforumService subforumService) : IThreadService
 {
-    private readonly List<ForumThread> _threads = new()
-    {
-        new ForumThread
-        {
-            Name = "Thread 1",
-            Author = "Author 1",
-            Date = DateTime.Now,
-        },
-        new ForumThread
-        {
-            Name = "Thread 2",
-            Author = "Author 2",
-            Date = DateTime.Now,
-        }
-    };
-    
     public IEnumerable<ForumThread> Get(int forumId)
     {
-        // TODO search for threads in forumId, must setup PostgreSQL first
         logger.LogInformation("Getting threads");
-        // return new List<ForumThread>().ToArray();
-        return _threads;
+        return context.Threads;
+    }
+
+    public ActionResult<ForumThread> Create(string name, string? description, string author, string subforumName)
+    {
+        logger.LogInformation("Creating thread");
+        var subforumId = subforumService.IdFromSubforumName(subforumName);
+        ForumThread thread = new ()
+        {
+            Name = name,
+            Description = description,
+            Author = author,
+            SubforumId = subforumId
+        };
+        
+        context.Threads.Add(thread);
+        context.SaveChanges();
+        
+        return thread;
     }
 }

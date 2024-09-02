@@ -21,11 +21,11 @@ public class SubforumController(ISubforumService subforumService) : ControllerBa
         return subforumService.NameFromSubforumId(subforumId);
     }
 
-    public struct CreateSubforumRequest
+    public struct CreateSubforumRequest(string description, string name, string categoryName)
     {
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string CategoryName { get; set; }
+        public string Name { get; } = name;
+        public string Description { get; } = description;
+        public string CategoryName { get; } = categoryName;
     }
     
     [HttpPost(Name = "CreateSubforum")]

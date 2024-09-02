@@ -10,8 +10,23 @@ namespace ForumBackendAPI.Controllers;
 public class CategoryController(ICategoryService categoryService) : ControllerBase
 {
     [HttpGet(Name = "GetCategories")]
-    public IEnumerable<Category> Get() => categoryService.Get();
+    public async Task<IActionResult> Get()
+    {
+        var categories = await categoryService.Get();
+
+        return Ok(categories);
+    }
 
     [HttpPost(Name = "CreateCategory")]
-    public ActionResult<Category> Create([FromBody] Category category) => categoryService.Create(category);
+    public IActionResult Create([FromBody] Category category)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest("Category name is too long (maximum 50 characters).");
+        }
+
+        var cat = categoryService.Create(category);
+        
+        return Ok(cat);
+    }
 }

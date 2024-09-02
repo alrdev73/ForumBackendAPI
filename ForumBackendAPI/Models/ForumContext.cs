@@ -25,10 +25,5 @@ public class ForumContext : DbContext
         modelBuilder.Entity<Category>().ToTable("Categories");
         modelBuilder.Entity<Subforum>().ToTable("Subforums");
         modelBuilder.Entity<ForumThread>().ToTable("Threads");
-        
-        // modelBuilder.Entity<Category>()
-            // .HasMany(c => c.Subforums)
-            // .WithOne(s => s.Category)
-            // .HasForeignKey(s => s.CategoryId);
     }
 }

@@ -8,10 +8,8 @@ public class ForumThread
 {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int ForumThreadId { get; set; }
-    
-    [MaxLength (50)]
-    [Required]
-    public string Name { get; set; } 
+
+    [MaxLength(50)] [Required] public string Name { get; set; } = "noname";
     
     [MaxLength (100)]
     public string? Description { get; set; }
