@@ -10,18 +10,36 @@ namespace ForumBackendAPI.Controllers;
 public class SubforumController(ISubforumService subforumService) : ControllerBase
 {
     [HttpGet("{categoryId}")]
-    public IEnumerable<Subforum> Get(int categoryId)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> GetAll(int categoryId)
     {
-        return subforumService.Get(categoryId);
+        var subforums = await subforumService.GetAll(categoryId);
+
+        if (!subforums.Any())
+        {
+            return NoContent();
+        }
+        
+        return Ok(subforums);
     }
     
     [HttpGet("Name/{subforumId}")]
-    public string Name(int subforumId)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Name(int subforumId)
     {
-        return subforumService.NameFromSubforumId(subforumId);
+        var name = await subforumService.NameFromSubforumId(subforumId);
+
+        if (name == string.Empty)
+        {
+            return NotFound();
+        }
+        
+        return Ok(name);
     }
 
-    public struct CreateSubforumRequest(string description, string name, string categoryName)
+    public readonly struct CreateSubforumRequest(string description, string name, string categoryName)
     {
         public string Name { get; } = name;
         public string Description { get; } = description;
@@ -29,14 +47,40 @@ public class SubforumController(ISubforumService subforumService) : ControllerBa
     }
     
     [HttpPost(Name = "CreateSubforum")]
-    public ActionResult<Subforum> Create([FromBody] CreateSubforumRequest request)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Create([FromBody] CreateSubforumRequest request)
     {
-        return subforumService.Create(request.Name, request.Description, request.CategoryName);
+        try
+        {
+            var created = await subforumService.Create(request.Name, request.Description, request.CategoryName);
+
+            if (created == null)
+            {
+                return BadRequest("Subforum creation failed.");
+            }
+            
+            return CreatedAtAction(nameof(Name), new { id = created.SubforumId}, created);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex);
+        }
     }
     
     [HttpPut("{subforumId}")]
-    public ActionResult<Subforum> Update(int subforumId, [FromBody] Subforum subforum)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Update(int subforumId, [FromBody] Subforum subforum)
     {
-        return subforumService.Update(subforumId, subforum);
+        try
+        { 
+            var updated = await subforumService.Update(subforumId, subforum);
+            return Ok(updated);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex);
+        }
     }
 }

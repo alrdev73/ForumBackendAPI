@@ -6,28 +6,39 @@ namespace ForumBackendAPI.Services;
 public class CategoryService(ILogger<CategoryService> logger, ForumContext context) : ICategoryService
 {
     
-    public string NameFromCategoryId(int categoryId)
+    public async Task<string> NameFromCategoryId(int categoryId)
     {
-        return context.Categories.First(c => c.CategoryId == categoryId).Name;
+        var category = await context.Categories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.CategoryId == categoryId);
+        
+        return category == null ? string.Empty : category.Name;
     }
     
-    public int CategoryIdFromName(string categoryName)
+    public async Task<int> CategoryIdFromName(string categoryName)
     {
-        return context.Categories.First(c => c.Name.ToLower() == categoryName.ToLower()).CategoryId;
+        var category = await context.Categories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Name.Equals(categoryName, StringComparison.CurrentCultureIgnoreCase));
+
+        return category == null ? int.MinValue : category.CategoryId;
     }
 
     public async Task<IEnumerable<Category>> Get()
     {
         logger.LogInformation("Getting categories");
-        var categories = await context.Categories.ToListAsync();
+        var categories = await context.Categories
+            .AsNoTracking()
+            .ToListAsync();
+        
         return categories;
     }
     
-    public Category Create(Category category)
+    public async Task<Category> Create(Category category)
     {
         logger.LogInformation("Creating category");
         context.Categories.Add(category);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
         return category;
     }
 }

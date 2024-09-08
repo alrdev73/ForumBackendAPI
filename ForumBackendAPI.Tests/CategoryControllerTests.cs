@@ -52,8 +52,6 @@ public class CategoryControllerTests
 
         var result = await controller.Get();
 
-        var actionResult = Assert.IsType<OkObjectResult>(result);
-        var model = Assert.IsAssignableFrom<IEnumerable<Category>>(actionResult.Value);
-        Assert.Empty(model);
+        Assert.IsType<NoContentResult>(result);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using ForumBackendAPI.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ForumBackendAPI.Services;
 
@@ -7,16 +8,30 @@ public class ThreadService(ILogger<ThreadService> logger,
     ForumContext context,
     ISubforumService subforumService) : IThreadService
 {
-    public IEnumerable<ForumThread> Get(int forumId)
+    public async Task<IEnumerable<ForumThread>> GetAll(int forumId)
     {
         logger.LogInformation("Getting threads");
-        return context.Threads;
+
+        var threads = await context.Threads
+            .Where(t => t.SubforumId == forumId)
+            .AsNoTracking()
+            .ToListAsync();
+        
+        return threads;
     }
 
-    public ActionResult<ForumThread> Create(string name, string? description, string author, string subforumName)
+    public async Task<ForumThread?> Create(string name, string? description, string author, string subforumName)
     {
         logger.LogInformation("Creating thread");
-        var subforumId = subforumService.IdFromSubforumName(subforumName);
+        
+        var subforumId = await subforumService.IdFromSubforumName(subforumName);
+
+        if (subforumId == int.MinValue)
+        {
+            // the subforum doesn't exist, abort thread creation.
+            return null;
+        }
+        
         ForumThread thread = new ()
         {
             Name = name,
@@ -26,7 +41,7 @@ public class ThreadService(ILogger<ThreadService> logger,
         };
         
         context.Threads.Add(thread);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
         
         return thread;
     }
