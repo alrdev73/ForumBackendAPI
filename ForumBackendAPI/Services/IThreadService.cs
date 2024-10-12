@@ -6,5 +6,5 @@ namespace ForumBackendAPI.Services;
 public interface IThreadService
 {
     Task<IEnumerable<ForumThread>> GetAll(int forumId);
-    Task<ForumThread?> Create(string name, string? description, string author, string subforumName);
+    Task<ForumThread?> Create(string name, string? description, string author, int subforumId);
 }

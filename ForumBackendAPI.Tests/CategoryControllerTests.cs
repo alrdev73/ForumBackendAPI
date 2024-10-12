@@ -28,7 +28,7 @@ public class CategoryControllerTests
     }
     
     [Fact]
-    public async Task Get_ReturnsCategoriesWithOk_TwoCategories()
+    public async Task Get_WithTwoCategories_ReturnsCategoriesWithOk()
     {
         var mockService = new Mock<ICategoryService>();
         mockService.Setup(service => service.Get())
@@ -43,7 +43,7 @@ public class CategoryControllerTests
     }
     
     [Fact]
-    public async Task Get_ReturnsCategoriesWithOk_ZeroCategories()
+    public async Task Get_WithNoCategories_ReturnsNoContent()
     {
         var mockService = new Mock<ICategoryService>();
         mockService.Setup(service => service.Get())
@@ -53,5 +53,56 @@ public class CategoryControllerTests
         var result = await controller.Get();
 
         Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task Create_WithUnnamedCategory_ReturnsBadRequest()
+    {
+        var testCategory = new Category();
+        
+        var mockService = new Mock<ICategoryService>();
+        mockService.Setup(service => service.Create(testCategory))
+            .Throws<Exception>();
+        var controller = new CategoryController(mockService.Object);
+
+        var result = await controller.Create(testCategory);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+    
+    [Fact]
+    public async Task Create_WithCategoryNameLongerThan50Chars_ReturnsBadRequest()
+    {
+        var testCategory = new Category()
+        {
+            Name = "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+        };
+        
+        var mockService = new Mock<ICategoryService>();
+        mockService.Setup(service => service.Create(testCategory))
+            .Throws<Exception>();
+        var controller = new CategoryController(mockService.Object);
+
+        var result = await controller.Create(testCategory);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Create_WithValidCategory_ReturnsCreatedAtAction()
+    {
+        var testCategory = new Category()
+        {
+            Name = "TestCreatedCategory"
+        };
+
+        var mockService = new Mock<ICategoryService>();
+        mockService.Setup(service => service.Create(testCategory))
+            .ReturnsAsync(testCategory);
+        var controller = new CategoryController(mockService.Object);
+
+        var result = await controller.Create(testCategory);
+
+        Assert.IsType<CreatedAtActionResult>(result);
     }
 }

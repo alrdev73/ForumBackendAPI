@@ -39,11 +39,11 @@ public class SubforumController(ISubforumService subforumService) : ControllerBa
         return Ok(name);
     }
 
-    public readonly struct CreateSubforumRequest(string description, string name, string categoryName)
+    public readonly struct CreateSubforumRequest(string description, string name, int categoryId)
     {
         public string Name { get; } = name;
         public string Description { get; } = description;
-        public string CategoryName { get; } = categoryName;
+        public int CategoryId { get; } = categoryId;
     }
     
     [HttpPost(Name = "CreateSubforum")]
@@ -53,7 +53,7 @@ public class SubforumController(ISubforumService subforumService) : ControllerBa
     {
         try
         {
-            var created = await subforumService.Create(request.Name, request.Description, request.CategoryName);
+            var created = await subforumService.Create(request.Name, request.Description, request.CategoryId);
 
             if (created == null)
             {
@@ -74,8 +74,9 @@ public class SubforumController(ISubforumService subforumService) : ControllerBa
     public async Task<IActionResult> Update(int subforumId, [FromBody] Subforum subforum)
     {
         try
-        { 
+        {
             var updated = await subforumService.Update(subforumId, subforum);
+            
             return Ok(updated);
         }
         catch (Exception ex)

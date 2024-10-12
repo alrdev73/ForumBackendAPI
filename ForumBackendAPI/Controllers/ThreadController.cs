@@ -24,12 +24,13 @@ public class ThreadController(IThreadService threadService) : ControllerBase
         return Ok(threads);
     }
 
-    public readonly struct ThreadCreateRequest(string name, string description, string author, string subforumName)
+    public readonly struct ThreadCreateRequest(string name, string description, string author, int subforumId)
     {
         public string Name { get; } = name;
         public string? Description { get; } = description;
         public string Author { get; } = author;
-        public string SubforumName { get; } = subforumName;
+        
+        public int SubforumId { get; } = subforumId;
     }
     
 
@@ -39,7 +40,7 @@ public class ThreadController(IThreadService threadService) : ControllerBase
         try
         {
             var created =
-                await threadService.Create(thread.Name, thread.Description, thread.Author, thread.SubforumName);
+                await threadService.Create(thread.Name, thread.Description, thread.Author, thread.SubforumId);
 
             if (created == null)
             {

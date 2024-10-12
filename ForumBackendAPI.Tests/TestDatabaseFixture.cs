@@ -25,6 +25,7 @@ public class TestDatabaseFixture
                     context.AddRange(
                         new Category{Name = "TestCategory1"},
                         new Category{Name = "TestCategory2"});
+                    context.SaveChanges();
                 }
             }
         }

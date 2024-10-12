@@ -20,13 +20,13 @@ public class ThreadService(ILogger<ThreadService> logger,
         return threads;
     }
 
-    public async Task<ForumThread?> Create(string name, string? description, string author, string subforumName)
+    public async Task<ForumThread?> Create(string name, string? description, string author, int subforumId)
     {
         logger.LogInformation("Creating thread");
         
-        var subforumId = await subforumService.IdFromSubforumName(subforumName);
+        var subforumExists = await subforumService.Exists(subforumId);
 
-        if (subforumId == int.MinValue)
+        if (!subforumExists)
         {
             // the subforum doesn't exist, abort thread creation.
             return null;
@@ -39,6 +39,7 @@ public class ThreadService(ILogger<ThreadService> logger,
             Author = author,
             SubforumId = subforumId
         };
+        
         
         context.Threads.Add(thread);
         await context.SaveChangesAsync();

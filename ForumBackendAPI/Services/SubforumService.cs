@@ -17,15 +17,6 @@ public class SubforumService(ILogger<SubforumService> logger, ForumContext conte
         return subforums;
     }
     
-    public async Task<int> IdFromSubforumName(string subforumName)
-    {
-        var subforum = await context.Subforums
-            .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Name == subforumName);
-
-        return subforum == null ? int.MinValue : subforum.SubforumId;
-    }
-    
     public async Task<string> NameFromSubforumId(int subforumId)
     {
         var subforum = await context.Subforums
@@ -34,13 +25,22 @@ public class SubforumService(ILogger<SubforumService> logger, ForumContext conte
         
         return subforum == null ? string.Empty : subforum.Name;
     }
-    
-    public async Task<Subforum?> Create(string name, string description, string categoryName)
+
+    public async Task<bool> Exists(int subforumId)
+    {
+        var subforum = await context.Subforums
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.SubforumId == subforumId);
+
+        return subforum == null;
+    }
+
+    public async Task<Subforum?> Create(string name, string description, int categoryId)
     {
         logger.LogInformation("Creating subforum");
-        var categoryId = await categoryService.CategoryIdFromName(categoryName);
+        var categoryExists = await categoryService.Exists(categoryId);
         
-        if (categoryId == int.MinValue)
+        if (!categoryExists)
         {
             // category doesn't exist, abort subforum creation
             return null;

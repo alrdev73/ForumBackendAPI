@@ -5,7 +5,6 @@ namespace ForumBackendAPI.Services;
 
 public class CategoryService(ILogger<CategoryService> logger, ForumContext context) : ICategoryService
 {
-    
     public async Task<string> NameFromCategoryId(int categoryId)
     {
         var category = await context.Categories
@@ -15,13 +14,13 @@ public class CategoryService(ILogger<CategoryService> logger, ForumContext conte
         return category == null ? string.Empty : category.Name;
     }
     
-    public async Task<int> CategoryIdFromName(string categoryName)
+    public async Task<bool> Exists(int categoryId)
     {
         var category = await context.Categories
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Name.Equals(categoryName, StringComparison.CurrentCultureIgnoreCase));
+            .FirstOrDefaultAsync(c => c.CategoryId == categoryId);
 
-        return category == null ? int.MinValue : category.CategoryId;
+        return category == null;
     }
 
     public async Task<IEnumerable<Category>> Get()
