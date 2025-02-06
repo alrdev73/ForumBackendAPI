@@ -6,71 +6,89 @@ namespace ForumBackendAPI.Services;
 
 public class SubforumService(ILogger<SubforumService> logger, ForumContext context, ICategoryService categoryService) : ISubforumService
 {
-    public async Task<IEnumerable<Subforum>> GetAll([FromRoute] int categoryId)
+    
+    public async Task<bool> Create(string name, string description, int categoryId)
+    {
+        logger.LogInformation("Creating subforum");
+        var category = await categoryService.GetCategoryForId(categoryId);
+        
+        if (category == null)
+        {
+            // category doesn't exist, abort subforum creation.
+            return false;
+        }
+
+        try
+        {
+            var subforum = new Subforum
+            {
+                Name = name,
+                Description = description,
+                CategoryId = categoryId,
+                Category = category
+            };
+        
+            context.Subforums.Add(subforum);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception e)
+        { 
+            logger.LogError("Exception thrown when adding subforum: {e}", e);
+            return false;
+        }
+    }
+    
+    public async Task<IList<Subforum>> GetAll([FromRoute] int categoryId)
     {
         logger.LogInformation("Getting subforums");
-        var subforums = await context.Subforums
+        return await context.Subforums
             .Where(c => c.CategoryId == categoryId)
             .AsNoTracking()
             .ToListAsync();
-
-        return subforums;
-    }
-    
-    public async Task<string> NameFromSubforumId(int subforumId)
-    {
-        var subforum = await context.Subforums
-            .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.SubforumId == subforumId);
-        
-        return subforum == null ? string.Empty : subforum.Name;
     }
 
-    public async Task<bool> Exists(int subforumId)
+    public async Task<Subforum?> GetSubforumForId(int subforumId)
     {
-        var subforum = await context.Subforums
-            .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.SubforumId == subforumId);
-
-        return subforum == null;
+        return await context.Subforums.FindAsync(subforumId);
     }
 
-    public async Task<Subforum?> Create(string name, string description, int categoryId)
+    public async Task<int> Update(int subforumId, string name = "", string description = "")
     {
-        logger.LogInformation("Creating subforum");
-        var categoryExists = await categoryService.Exists(categoryId);
+        logger.LogInformation("Updating subforum with id {subforumId}", subforumId);
         
-        if (!categoryExists)
-        {
-            // category doesn't exist, abort subforum creation
-            return null;
-        }
-        
-        var subforum = new Subforum
-        {
-            Name = name,
-            Description = description,
-            CategoryId = categoryId
-        };
-        
-        context.Subforums.Add(subforum);
-        await context.SaveChangesAsync();
-        
-        return subforum;
-    }
-    
-  
-    public async Task<Subforum> Update(int subforumId, Subforum subforum)
-    {
-        logger.LogInformation("Updating subforum");
-
-        await context.Subforums
+        var rowsUpdated = await context.Subforums
             .Where(c => c.SubforumId == subforumId)
             .ExecuteUpdateAsync(s => s
-                .SetProperty(n => n.Name, subforum.Name)
-                .SetProperty(d => d.Description, subforum.Description));
+                .SetProperty(n => n.Name, n => name != "" && !name.Equals(n.Name) ? name : n.Name)
+                .SetProperty(d => d.Description, d => description != "" && !description.Equals(d.Description) ? description : d.Description));
         
-        return subforum;
+        logger.LogDebug("Renamed subforum with id {subforumId}. Rows updated: {rowsUpdated}", subforumId, rowsUpdated);
+        return rowsUpdated;
     }
-    
+
+    public async Task<bool> Delete(int subforumId)
+    {
+        logger.LogInformation("Deleting subforum");
+        
+        var subforum = await context.Subforums.FindAsync(subforumId);
+
+        if (subforum == null)
+        {
+            // subforum doesn't exist, so it cannot be deleted
+            return false;
+        }
+        
+        try
+        {
+            context.Remove(subforum);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception e)
+        {
+            logger.LogError("Exception when deleting category: {e}", e);
+            return false;
+        }    
+    }
 }

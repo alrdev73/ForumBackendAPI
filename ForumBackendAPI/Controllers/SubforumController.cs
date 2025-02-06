@@ -7,7 +7,7 @@ namespace ForumBackendAPI.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
-public class SubforumController(ISubforumService subforumService) : ControllerBase
+public class SubforumController(ILogger<SubforumController> logger, ISubforumService subforumService) : ControllerBase
 {
     [HttpGet("{categoryId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -16,27 +16,12 @@ public class SubforumController(ISubforumService subforumService) : ControllerBa
     {
         var subforums = await subforumService.GetAll(categoryId);
 
-        if (!subforums.Any())
+        if (subforums.Count == 0)
         {
             return NoContent();
         }
         
         return Ok(subforums);
-    }
-    
-    [HttpGet("Name/{subforumId}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Name(int subforumId)
-    {
-        var name = await subforumService.NameFromSubforumId(subforumId);
-
-        if (name == string.Empty)
-        {
-            return NotFound();
-        }
-        
-        return Ok(name);
     }
 
     public readonly struct CreateSubforumRequest(string description, string name, int categoryId)
@@ -47,41 +32,72 @@ public class SubforumController(ISubforumService subforumService) : ControllerBa
     }
     
     [HttpPost(Name = "CreateSubforum")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] CreateSubforumRequest request)
     {
         try
         {
             var created = await subforumService.Create(request.Name, request.Description, request.CategoryId);
 
-            if (created == null)
+            if (!created)
             {
                 return BadRequest("Subforum creation failed.");
             }
-            
-            return CreatedAtAction(nameof(Name), new { id = created.SubforumId}, created);
+
+            return Created();
         }
         catch (Exception ex)
         {
-            return BadRequest(ex);
+            logger.LogError("Exception occurred on Subforum create: {ex}", ex);
+            return StatusCode(500);
         }
     }
     
-    [HttpPut("{subforumId}")]
+    [HttpPatch("{subforumId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Update(int subforumId, [FromBody] Subforum subforum)
     {
         try
         {
-            var updated = await subforumService.Update(subforumId, subforum);
+            await subforumService.Update(subforumId, name: subforum.Name, description: subforum.Description);
             
-            return Ok(updated);
+            return Ok("Subforum updated successfully.");
         }
         catch (Exception ex)
         {
-            return BadRequest(ex);
+            logger.LogError("Exception occurred on Subforum update: {ex}", ex);
+            return StatusCode(500);
         }
     }
+
+    [HttpDelete("{subforumId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Delete(int subforumId)
+    {
+        logger.LogInformation("Deleting subforum with id {subforumId}", subforumId);
+
+        try
+        {
+            var success = await subforumService.Delete(subforumId);
+
+            if (!success)
+            {
+                return BadRequest("Subforum deletion failed.");
+            }
+
+            return Ok("Subforum deleted successfully.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Exception when deleting subforum: {ex}", ex);
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
 }

@@ -8,27 +8,13 @@ namespace ForumBackendAPITest;
 public class TestDatabaseFixture
 {
 
-    private static readonly object _lock = new();
-    private static bool _databaseInitialised;
-
     public TestDatabaseFixture()
     {
-        lock (_lock)
-        {
-            if (!_databaseInitialised)
-            {
-                using (var context = CreateContext())
-                {
-                    context.Database.EnsureDeleted();
-                    context.Database.EnsureCreated();
+        using var context = CreateContext();
+        context.Database.EnsureDeleted();
+        context.Database.EnsureCreated();
 
-                    context.AddRange(
-                        new Category{Name = "TestCategory1"},
-                        new Category{Name = "TestCategory2"});
-                    context.SaveChanges();
-                }
-            }
-        }
+        Cleanup();
     }
 
     public ForumContext CreateContext()
@@ -39,8 +25,30 @@ public class TestDatabaseFixture
         
         return new ForumContext(
                     new DbContextOptionsBuilder<ForumContext>()
-                        .UseNpgsql(config.GetConnectionString("Default"))
+                        .UseNpgsql(config.GetConnectionString("Test"))
                         .Options, config);
     }
+
+    public void Cleanup()
+    {
+        using var context = CreateContext();
         
+        context.Categories.RemoveRange(context.Categories);
+        context.Subforums.RemoveRange(context.Subforums);
+        context.Threads.RemoveRange(context.Threads);
+        
+        context.AddRange(
+            new Category{Name = "TestCategory1"},
+            new Category{Name = "TestCategory2"},
+            new Subforum{CategoryId = 1, Name = "TestSubforum1Cat1", Description = "TestSubforum1Description"},
+            new Subforum{CategoryId = 1, Name = "TestSubforum2Cat1"},
+            new Subforum{CategoryId = 1, Name = "TestSubforum3Cat1"},
+            new Subforum{CategoryId = 2, Name = "TestSubforum1Cat2"},
+            new Subforum{CategoryId = 2, Name = "TestSubforum2Cat2"},
+            new ForumThread{SubforumId = 1, Name = "Subforum1Thread1"},
+            new ForumThread{SubforumId = 1, Name = "Subforum1Thread2"},
+            new ForumThread{SubforumId = 1, Name = "Subforum1Thread3"}
+            );
+        context.SaveChanges();
+    }
 }

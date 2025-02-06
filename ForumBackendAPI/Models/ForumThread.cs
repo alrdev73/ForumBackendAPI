@@ -10,13 +10,12 @@ public class ForumThread
     public int ForumThreadId { get; set; }
 
     [MaxLength(50)] [Required] public string Name { get; set; } = "noname";
-    
-    [MaxLength (100)]
-    public string? Description { get; set; }
+
+    [MaxLength(100)] public string Description { get; set; } = "";
 
     [MaxLength(50)] [Required] public string Author { get; set; } = "noname";
  
-    public DateTime Date { get; set; } = DateTime.Today;
+    public DateTime Date { get; set; } = DateTime.UtcNow;
     
     public int Replies { get; set; } 
     
@@ -26,4 +25,6 @@ public class ForumThread
     
     [JsonIgnore]
     public virtual Subforum Subforum { get; set; }
+
+    // public IList<ForumPost> posts = new List<ForumPost>();
 }
